@@ -1,6 +1,7 @@
 ![image-20200821184000857](https://gitee.com/joser_zhang/upic/raw/master/uPic/image-20200821184000857.png)
 
 一个基于中心分发的模块化框架
+[演示例子](https://github.com/josercc/Example)
 
 > 这个框架核心在于`注册列表`和`分发中心`，在`App`内部完成所有模块的注册。
 >
