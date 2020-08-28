@@ -30,12 +30,17 @@ public struct ControllerCenter {
     public mutating func set(globaleParameter block:@escaping((Modify) -> Modify)) {
         globalModify = block(globalModify)
     }
-    
+    /// 获取全局函数返回可选值
+    /// - Parameter key: 参数对应的key
+    /// - Returns: 返回类型的可选值
+    public func get<T>(globaleParameter key:String) -> T? {
+        return globalModify.parameter[key] as? T
+    }
     /// 获取全局参数
     /// - Parameter key: 参数对应的key
     /// - Parameter default: 默认值
     /// - Returns: 对应类型的值
-    public func get<T>(globaleParameter key:String, default:T? = nil) -> T? {
+    public func get<T>(globaleParameter key:String, default:T) -> T {
         return globalModify.parameter[key] as? T ?? `default`
     }
 }
