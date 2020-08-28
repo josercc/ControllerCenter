@@ -1,5 +1,23 @@
 # 版本说明
 
+## 1.2.0版本
+
+新增设置和获取全局参数的方法
+
+```swift
+/// 设置全局参数
+/// - Parameter block: 设置全局修改器的回掉
+public mutating mutating func set(globaleParameter block: @escaping ((Modify) -> Modify))
+
+/// 获取全局参数
+/// - Parameter key: 参数对应的key
+/// - Parameter default: 默认值
+/// - Returns: 对应类型的值
+public func get<T>(globaleParameter key: String, default: T? = nil) -> T?
+```
+
+
+
 ## 1.1.0版本
 
 新增了在注册模块时候可以修改调用模块的参数
