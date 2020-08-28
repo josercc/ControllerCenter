@@ -9,8 +9,9 @@ import UIKit
 
 public struct Modify {
     private let identifier:String
-    private var parameter:[String:Any] = [:]
+    var parameter:[String:Any] = [:]
     private var modalPresentationStyle:UIModalPresentationStyle?
+    fileprivate var fromIdentifier:String?
     init(identifier:String) {
         self.identifier = identifier
     }
@@ -19,7 +20,7 @@ public struct Modify {
         guard let makeBlock = ControllerCenter.center.registerControllers[identifier] else {
             return nil
         }
-        return makeBlock(parameter)
+        return makeBlock(self)
     }
     
     /// 获取前往模块的对象控制器
@@ -60,13 +61,26 @@ extension Modify {
     /// - Parameters:
     ///   - key: 参数对应的唯一Key
     ///   - value: 参数对应的值可以允许为空
+    ///   - from: 上一个模块来源 默认不设置 如果设置如果上个模块不对应则无法赋值
     /// - Returns: 模块修改器
-    public func parameter(_ key:String, value:Any?) -> Modify {
+    public func parameter(_ key:String, value:Any?, from:String? = nil) -> Modify {
         guard let value = value else {
             return self
         }
         var modify = self
-        modify.parameter[key] = value
+        if let from = from, let fromIdentifier = fromIdentifier, from == fromIdentifier  {
+            modify.parameter[key] = value
+        } else if from == nil {
+            modify.parameter[key] = value
+        }
+        return modify
+    }
+    /// 设置来源模块标识符
+    /// - Parameter identifier: 模块标识符
+    /// - Returns: 修改器
+    public func from(_ identifier:String) -> Modify {
+        var modify = self
+        modify.fromIdentifier = identifier
         return modify
     }
     /// 设置模态弹出的样式
@@ -75,6 +89,17 @@ extension Modify {
     public func modalPresentationStyle(_ style:UIModalPresentationStyle) -> Modify {
         var modify = self
         modify.modalPresentationStyle = style
+        return modify
+    }
+}
+
+extension Module {
+    /// 通过调用模块生成前往模块的修改器为了可以获取上个模块的标识符
+    /// - Parameter identifier: 前往模块的标识符
+    /// - Returns: 修改器
+    public static func make(_ identifier:String) -> Modify {
+        var modify = Modify(identifier: identifier)
+        modify.fromIdentifier = self.identifier
         return modify
     }
 }
