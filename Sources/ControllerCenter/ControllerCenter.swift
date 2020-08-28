@@ -36,7 +36,7 @@ public struct ControllerCenter {
     /// - Parameter default: 默认值
     /// - Returns: 对应类型的值
     public func get<T>(globaleParameter key:String, default:T? = nil) -> T? {
-        return globalModify.parameter[key] as? T ?? `default``
+        return globalModify.parameter[key] as? T ?? `default`
     }
 }
 
