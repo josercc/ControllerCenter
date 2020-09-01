@@ -11,13 +11,16 @@ public struct ControllerCenter {
     internal var registerControllers:[String:MakeControllerBlock] = [:]
     /// 储存全局参数设置
     internal var globaleParameterModifyBlock:((Modify) -> Modify)?
+    /// 全局参数通过其他模块已经进行修改的回掉
+    var globaleParameterModifyDidChangedBlock:((Modify) -> Void)?
     var globaleParameterModify:Modify {
-        var modify = Modify(identifier: "ControllerCenter")
         if let block = globaleParameterModifyBlock {
-            modify = block(modify)
+            return block(_tempModify)
         }
-        return modify
+        return _tempModify
     }
+    var _tempModify:Modify = Modify(identifier: "ControllerCenter")
+    
     /// 注册对应的模块
     /// - Parameter controllerType: 模块视图类型
     /// - Parameter block: 可以模块跳转之前在App内部重新修改设置的参数
@@ -49,6 +52,24 @@ public struct ControllerCenter {
     /// - Returns: 对应类型的值
     public func get<T>(globaleParameter key:String, default:T) -> T {
         return globaleParameterModify.parameter[key] as? T ?? `default`
+    }
+    
+    /// 更新全局参数
+    /// - Parameters:
+    ///   - key: 全局参数的Key
+    ///   - value: 更新的值
+    public mutating func update<T>(globaleParameter key:String, value:T?) {
+        if let value = value {
+            _tempModify.parameter[key] = value
+        } else {
+            _tempModify.parameter.removeValue(forKey: key)
+        }
+    }
+    
+    /// 监听全局函数值已经发生了改变
+    /// - Parameter block: 发生改变的回掉
+    public mutating func listen(globaleParameterChanged block:@escaping((Modify) -> Void)) {
+        globaleParameterModifyDidChangedBlock = block
     }
     
 }
