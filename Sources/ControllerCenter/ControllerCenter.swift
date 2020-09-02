@@ -44,26 +44,30 @@ public struct ControllerCenter {
     /// - Parameter key: 参数对应的key
     /// - Returns: 返回类型的可选值
     public func get<T>(globaleParameter key:String) -> T? {
-        return globaleParameterModify.parameter[key] as? T
+        let value:T? = globaleParameterModify.parameter[key] as? T
+        guard let block = globaleParameterModify.modifyNoticeCompletionDic[key] else {
+            return value
+        }
+        return block(value,false).value as? T
     }
     /// 获取全局参数
     /// - Parameter key: 参数对应的key
     /// - Parameter default: 默认值
     /// - Returns: 对应类型的值
     public func get<T>(globaleParameter key:String, default:T) -> T {
-        return globaleParameterModify.parameter[key] as? T ?? `default`
+        return get(globaleParameter: key) ?? `default`
     }
     
     /// 更新全局参数
     /// - Parameters:
     ///   - key: 全局参数的Key
     ///   - value: 更新的值
-    public mutating func update<T>(globaleParameter key:String, value:T?) {
-        if let value = value {
-            _tempModify.parameter[key] = value
-        } else {
-            _tempModify.parameter.removeValue(forKey: key)
+    public mutating func update(globaleParameter key:String, value:Any?) {
+        guard let block = globaleParameterModify.modifyNoticeCompletionDic[key] else {
+            return
         }
+        let parameter = block(value,true)
+        _tempModify.parameter[key] = parameter.value
     }
     
     /// 监听全局函数值已经发生了改变
