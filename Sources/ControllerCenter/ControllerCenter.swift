@@ -6,6 +6,7 @@ public struct ControllerCenter {
      - returns: 返回该模块的实例对象
      */
     internal typealias MakeControllerBlock = ((_ modify:Modify) -> Module)
+    /// 获取一个全局的模块转发器
     public static var center = ControllerCenter()
     /// 储存已经注册模块的回掉
     internal var registerControllers:[String:MakeControllerBlock] = [:]
@@ -13,12 +14,14 @@ public struct ControllerCenter {
     internal var globaleParameterModifyBlock:((Modify) -> Modify)?
     /// 全局参数通过其他模块已经进行修改的回掉
     var globaleParameterModifyDidChangedBlock:((Modify) -> Void)?
+    /// 获取最新的全局修改器
     var globaleParameterModify:Modify {
         if let block = globaleParameterModifyBlock {
             return block(_tempModify)
         }
         return _tempModify
     }
+    /// 一个可以临时修改的全局修改器
     var _tempModify:Modify = Modify(identifier: "ControllerCenter")
     
     /// 注册对应的模块
@@ -40,43 +43,31 @@ public struct ControllerCenter {
     public mutating func set(globaleParameter block:@escaping((Modify) -> Modify)) {
         globaleParameterModifyBlock = block
     }
-    /// 获取全局函数返回可选值
-    /// - Parameter key: 参数对应的key
-    /// - Returns: 返回类型的可选值
-    public func get<T>(globaleParameter key:String) -> T? {
-        let value:T? = globaleParameterModify.parameter[key] as? T
-        guard let block = globaleParameterModify.modifyNoticeCompletionDic[key] else {
-            return value
-        }
-        return block(value,false).value as? T
-    }
-    /// 获取全局参数
-    /// - Parameter key: 参数对应的key
-    /// - Parameter default: 默认值
-    /// - Returns: 对应类型的值
-    public func get<T>(globaleParameter key:String, default:T) -> T {
-        return get(globaleParameter: key) ?? `default`
-    }
-    
-    /// 更新全局参数
-    /// - Parameters:
-    ///   - key: 全局参数的Key
-    ///   - value: 更新的值
-    public mutating func update(globaleParameter key:String, value:Any?) {
-        guard let block = globaleParameterModify.modifyNoticeCompletionDic[key] else {
-            return
-        }
-        let parameter = block(value,true)
-        _tempModify.parameter[key] = parameter.value
-    }
     
     /// 监听全局函数值已经发生了改变
     /// - Parameter block: 发生改变的回掉
+    @available(*,deprecated,message: "Please use other func `parameter(key: , block: )`动态修改 不需要监听")
     public mutating func listen(globaleParameterChanged block:@escaping((Modify) -> Void)) {
         globaleParameterModifyDidChangedBlock = block
     }
     
 }
+
+extension ControllerCenter: ModifyParameter {
+    public func get<T>(globaleParameter key: String) -> T? {
+        return globaleParameterModify.get(globaleParameter: key)
+    }
+    
+    public func get<T>(globaleParameter key: String, default: T) -> T {
+        return globaleParameterModify.get(globaleParameter: key, default: `default`)
+    }
+    
+    public mutating func update(globaleParameter key: String, value: Any?) {
+        _tempModify.update(globaleParameter: key, value: value)
+        globaleParameterModifyDidChangedBlock?(_tempModify)
+    }
+}
+
 
 extension ControllerCenter {
     /// 创建一个前往模块修改器

@@ -33,7 +33,9 @@ public struct Modify {
     /// 获取前往模块的对象控制器
     /// - Returns: 控制器对象
     public func controller() -> UIViewController? {
-        return module() as? UIViewController
+        let controller = module() as? UIViewController
+        controller?.modify = self
+        return controller
     }
     
     /// Push跳转
@@ -97,7 +99,7 @@ extension Modify {
             return parameter
         }
         modify.modifyNoticeCompletionDic[key] = modifyNoticeBlock
-        return modify
+        return parameter(key, value: block(Parameter(key: key, value: nil, isNewValue: false, from: from)), from: from)
     }
     
     /// 设置来源模块标识符
@@ -168,6 +170,39 @@ extension Modify {
     }
 }
 
+extension Modify {
+    /// 获取全局函数返回可选值
+    /// - Parameter key: 参数对应的key
+    /// - Returns: 返回类型的可选值
+    public func get<T>(globaleParameter key:String) -> T? {
+        let value:T? = self.parameter[key] as? T
+        guard let block = self.modifyNoticeCompletionDic[key] else {
+            return value
+        }
+        return block(value,false).value as? T
+    }
+    /// 获取全局参数
+    /// - Parameter key: 参数对应的key
+    /// - Parameter default: 默认值
+    /// - Returns: 对应类型的值
+    public func get<T>(globaleParameter key:String, default:T) -> T {
+        return get(globaleParameter: key) ?? `default`
+    }
+    
+    /// 更新全局参数
+    /// - Parameters:
+    ///   - key: 全局参数的Key
+    ///   - value: 更新的值
+    public mutating func update(globaleParameter key:String, value:Any?) {
+        guard let block = self.modifyNoticeCompletionDic[key] else {
+            return
+        }
+        let parameter = block(value,true)
+        self.parameter[key] = parameter.value
+    }
+}
+
+
 extension Module {
     /// 通过调用模块生成前往模块的修改器为了可以获取上个模块的标识符
     /// - Parameter identifier: 前往模块的标识符
@@ -178,3 +213,6 @@ extension Module {
         return modify
     }
 }
+
+
+
