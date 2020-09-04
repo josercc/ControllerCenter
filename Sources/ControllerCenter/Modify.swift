@@ -171,11 +171,17 @@ extension Modify {
 }
 
 extension Modify {
-    /// 获取全局函数返回可选值
+    /// 获取全局函数返回可选值 key必须存在
     /// - Parameter key: 参数对应的key
     /// - Returns: 返回类型的可选值
     public func get<T>(globaleParameter key:String) -> T? {
         assert(self.modifyNoticeCompletionDic.keys.contains(key), "\(key)没有提前进行设置获取失败 请进行设置")
+        return get(globaleOptionalParameter: key)
+    }
+    /// 获取参数值 key可以不存在
+    /// - Parameter key: 参数对应的key
+    /// - Returns: 返回类型的可选值
+    public func get<T>(globaleOptionalParameter key:String) -> T? {
         let parameterValue:Any? = self.parameter[key]
         if let _parameterValue = parameterValue {
             assert(_parameterValue is T, "\(key)设置值类型必须为\(T.self)")
@@ -189,6 +195,13 @@ extension Modify {
             assert(value is T, "\(key)设置值类型必须为\(T.self)")
         }
         return modify.value as? T
+    }
+    /// 获取全局参数 允许可以不设置Key
+    /// - Parameter key: 参数对应的key
+    /// - Parameter default: 默认值
+    /// - Returns: 对应类型的值
+    public func get<T>(globaleOptionalParameter key:String, default:T) -> T {
+        return get(globaleOptionalParameter: key) ?? `default`
     }
     /// 获取全局参数
     /// - Parameter key: 参数对应的key
