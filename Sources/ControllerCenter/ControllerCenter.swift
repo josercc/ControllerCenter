@@ -30,9 +30,17 @@ public struct ControllerCenter {
     public mutating func register<T:Module>(_ controllerType:T.Type, customModify block:((Modify) -> Modify)? = nil) {
         let block:((Modify) -> Module) = { modify in
             if let block = block {
-                return T.make(block(modify).parameter)
+                if let module = T.make(block(modify)) {
+                    return module
+                } else {
+                    return T.make(block(modify).parameter)
+                }
             } else {
-                return T.make(modify.parameter)
+                if let module = T.make(modify) {
+                    return module
+                } else {
+                    return T.make(modify.parameter)
+                }
             }
         }
         self.registerControllers[T.identifier] = block

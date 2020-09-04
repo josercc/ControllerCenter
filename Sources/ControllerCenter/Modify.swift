@@ -176,11 +176,19 @@ extension Modify {
     /// - Returns: 返回类型的可选值
     public func get<T>(globaleParameter key:String) -> T? {
         assert(self.modifyNoticeCompletionDic.keys.contains(key), "\(key)没有提前进行设置获取失败 请进行设置")
-        let value:T? = self.parameter[key] as? T
+        let parameterValue:Any? = self.parameter[key]
+        if let _parameterValue = parameterValue {
+            assert(_parameterValue is T, "\(key)设置值类型必须为\(T.self)")
+        }
+        let value:T? = parameterValue as? T
         guard let block = self.modifyNoticeCompletionDic[key] else {
             return value
         }
-        return block(value,false).value as? T
+        let modify = block(value,false)
+        if let value = modify.value {
+            assert(value is T, "\(key)设置值类型必须为\(T.self)")
+        }
+        return modify.value as? T
     }
     /// 获取全局参数
     /// - Parameter key: 参数对应的key
