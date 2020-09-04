@@ -25,7 +25,7 @@ public protocol Module: ModifyModule {
 }
 
 extension Module {
-    static func make(_ modify:Modify) -> ModifyModule? {
+    public static func make(_ modify:Modify) -> ModifyModule? {
         return self.make(modify.parameter)
     }
 }

@@ -25,3 +25,13 @@ final class ControllerCenterTests: XCTestCase {
         ("testExample", testExample),
     ]
 }
+
+struct Model: Module {
+    static func make(_ parameter: [String : Any]) -> Module {
+        return Model()
+    }
+    
+    static var identifier: String { "" }
+    
+    
+}
