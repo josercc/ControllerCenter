@@ -23,7 +23,7 @@ public struct Modify {
         self.identifier = identifier
     }
     
-    private func module() -> Module? {
+    private func module() -> ModifyModule? {
         guard let makeBlock = ControllerCenter.center.registerControllers[identifier] else {
             return nil
         }
@@ -212,7 +212,7 @@ extension Modify {
 }
 
 
-extension Module {
+extension ModifyModule {
     /// 通过调用模块生成前往模块的修改器为了可以获取上个模块的标识符
     /// - Parameter identifier: 前往模块的标识符
     /// - Returns: 修改器

@@ -43,7 +43,7 @@ extension UIViewController: ModifyParameter {
     var modify:Modify? {
         get {
             let modify = objc_getAssociatedObject(self, &ModifyParameterKey.modify) as? Modify
-            assert(modify != nil, "禁止在<Module>协议方法和<UIViewController>初始化方法内部使用此属性")
+            assert(modify != nil, "禁止在<ModifyModule>协议方法和<UIViewController>初始化方法内部使用此属性")
             return modify
         }
         set {

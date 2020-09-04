@@ -5,7 +5,7 @@ public struct ControllerCenter {
      - parameter modify:模块配置
      - returns: 返回该模块的实例对象
      */
-    internal typealias MakeControllerBlock = ((_ modify:Modify) -> Module)
+    internal typealias MakeControllerBlock = ((_ modify:Modify) -> ModifyModule?)
     /// 获取一个全局的模块转发器
     public static var center = ControllerCenter()
     /// 储存已经注册模块的回掉
@@ -27,21 +27,13 @@ public struct ControllerCenter {
     /// 注册对应的模块
     /// - Parameter controllerType: 模块视图类型
     /// - Parameter block: 可以模块跳转之前在App内部重新修改设置的参数
-    public mutating func register<T:Module>(_ controllerType:T.Type, customModify block:((Modify) -> Modify)? = nil) {
-        let block:((Modify) -> Module) = { modify in
+    public mutating func register<T:ModifyModule>(_ controllerType:T.Type, customModify block:((Modify) -> Modify)? = nil) {
+        let block:((Modify) -> ModifyModule?) = { modify in
+            var _modify = modify
             if let block = block {
-                if let module = T.make(block(modify)) {
-                    return module
-                } else {
-                    return T.make(block(modify).parameter)
-                }
-            } else {
-                if let module = T.make(modify) {
-                    return module
-                } else {
-                    return T.make(modify.parameter)
-                }
+                _modify = block(_modify)
             }
+            return T.make(_modify)
         }
         self.registerControllers[T.identifier] = block
     }
