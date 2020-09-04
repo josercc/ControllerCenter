@@ -175,6 +175,7 @@ extension Modify {
     /// - Parameter key: 参数对应的key
     /// - Returns: 返回类型的可选值
     public func get<T>(globaleParameter key:String) -> T? {
+        assert(self.modifyNoticeCompletionDic.keys.contains(key), "\(key)没有提前进行设置获取失败 请进行设置")
         let value:T? = self.parameter[key] as? T
         guard let block = self.modifyNoticeCompletionDic[key] else {
             return value

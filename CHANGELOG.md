@@ -1,5 +1,12 @@
 # 版本说明
 
+## 1.6.0版本
+
+🟢 新增 Dictionary -> Decodable  `func toDecodable<T:Decodable>() -> T?`
+🟢 新增 Encodable ->  Dictionary `public func toMap() -> [String:Any]? `
+🟢 新增获取值没有设置断言报错 提前发现问题
+🟢 新增一个全新Module协议方法`make(_ modify:Modify) -> Module?`替换之前`make(_ parameter:[String:Any]) -> Module`
+
 ## 1.5.0版本
 
 1 修复了模块传递参数使用最新方法不生效
