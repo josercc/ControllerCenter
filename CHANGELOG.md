@@ -4,7 +4,7 @@
 
 🟢 新增 Dictionary -> Decodable  `func toDecodable<T:Decodable>() -> T?`
 
-🟢 新增 Encodable ->  Dictionary `public func toMap() -> [String:Any]? `
+🟢 新增 Encodable ->  Dictionary `func toMap() -> [String:Any]? `
 
 🟢 新增获取值没有设置断言报错 提前发现问题
 
