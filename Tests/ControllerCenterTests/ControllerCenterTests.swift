@@ -12,6 +12,9 @@ final class ControllerCenterTests: XCTestCase {
         ControllerCenter.center.set(globaleParameter: { modify in
             return modify.parameter(key: "age", block: {$0.parameter(value: self.age)})
                 .parameter(key: "age1", block: {$0.parameter(modifyOptional: &self.age)})
+                .parameter(key: "completion", block: {$0.parameter(value: { (controller:UIViewController, com:(() -> Void)) in
+                    com()
+                })})
         })
         assert(ControllerCenter.center.get(globaleParameter: "age")! == 8)
         assert(ControllerCenter.center.get(globaleParameter: "age1")! == 8)
@@ -20,6 +23,8 @@ final class ControllerCenterTests: XCTestCase {
         assert(self.age == 4)
         ControllerCenter.center.update(globaleParameter: "age1", value: nil)
         assert(self.age == nil)
+        let completion:((UIViewController,() -> Void) -> Void)? = ControllerCenter.center.get(globaleParameter: "completion")
+        completion?(UIViewController(),{})
     }
 
     static var allTests = [

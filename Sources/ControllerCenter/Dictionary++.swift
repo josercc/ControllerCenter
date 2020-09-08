@@ -8,7 +8,7 @@
 import Foundation
 
 extension Dictionary {
-    func toDecodable<T:Decodable>() -> T? {
+    public func toDecodable<T:Decodable>() -> T? {
         guard let data = try? JSONSerialization.data(withJSONObject: self, options: .fragmentsAllowed),
             let decodable = try? JSONDecoder().decode(T.self, from: data) else {
             return nil

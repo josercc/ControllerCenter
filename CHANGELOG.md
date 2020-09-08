@@ -1,5 +1,60 @@
 # 版本说明
 
+## 1.8.4版本
+
+🔴 修复了`func toDecodable<T:Decodable>() -> T?`没有放开的问题
+
+⚠️ 如果通过参数设置回掉 如果设置和获取不是同一个类型则会报错
+
+比如设置一个`@escaping`闭包，一个获取不是`@escaping`闭包则会报错
+
+```swift
+//🔴 错误
+//设置
+{ (completion:@escaping() -> Void)}
+//获取
+((() -> Void) -> Void)
+
+//🟢 正确
+//设置
+{ (completion:@escaping() -> Void)}
+//获取
+((@escaping() -> Void) -> Void)
+```
+
+⚠️ 如果模块之间回掉互传模型参数会报错 请使用字典进行传递
+
+```swift
+//🔴 错误
+//设置
+.parameter(key: "deleteNoteBlock", block: {$0.parameter(value: {[weak self] (map:API.Optional.NoteDetail.Info.Model?) in
+    guard let model = map else {
+        return
+    }
+    self?.deleteNote(noteId: model.id)
+})})
+//获取
+let deleteNoteBlock:((API.Optional.NoteDetail.Info.Model?) -> Void)? = modify.get(globaleOptionalParameter: "deleteNoteBlock")
+
+//🟢 正确
+//设置
+.parameter(key: "deleteNoteBlock", block: {$0.parameter(value: {[weak self] (map:[String:Any]?) in
+    guard let model:API.Optional.NoteDetail.Info.Model = map?.toDecodable() else {
+        return
+    }
+    self?.deleteNote(noteId: model.id)
+})})
+
+// 获取
+let deleteNoteBlock:((API.Optional.NoteDetail.Info.Model?) -> Void)? = { (model) in
+    let block:(([String:Any]?) -> Void)? = modify.get(globaleOptionalParameter: "deleteNoteBlock")
+    block?(model？.toMap())
+}
+
+```
+
+
+
 ## 1.8.3版本
 
 🔴 修复了设置全局和获取全局参数错误
