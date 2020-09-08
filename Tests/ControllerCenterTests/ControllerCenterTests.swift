@@ -10,7 +10,8 @@ final class ControllerCenterTests: XCTestCase {
         // Use XCTAssert and related functions to verify your tests produce the correct
         // results.
         ControllerCenter.center.set(globaleParameter: { modify in
-            return modify.parameter("age", value: self.age).parameter(key: "age1", block: {$0.parameter(modifyOptional: &self.age)})
+            return modify.parameter(key: "age", block: {$0.parameter(value: self.age)})
+                .parameter(key: "age1", block: {$0.parameter(modifyOptional: &self.age)})
         })
         assert(ControllerCenter.center.get(globaleParameter: "age")! == 8)
         assert(ControllerCenter.center.get(globaleParameter: "age1")! == 8)

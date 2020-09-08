@@ -99,7 +99,7 @@ extension Modify {
             return parameter
         }
         modify.modifyNoticeCompletionDic[key] = modifyNoticeBlock
-        return modify.parameter(key, value: block(Parameter(key: key, value: nil, isNewValue: false, from: from)), from: from)
+        return modify.parameter(key, value: block(Parameter(key: key, value: nil, isNewValue: false, from: from)).value, from: from)
     }
     
     /// 设置来源模块标识符

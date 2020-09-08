@@ -63,7 +63,9 @@ extension ControllerCenter: ModifyParameter {
     }
     
     public mutating func update(globaleParameter key: String, value: Any?) {
-        _tempModify.update(globaleParameter: key, value: value)
+        var _globaleParameterModify = globaleParameterModify
+        _globaleParameterModify.update(globaleParameter: key, value: value)
+        _tempModify = _globaleParameterModify
         globaleParameterModifyDidChangedBlock?(_tempModify)
     }
 }
