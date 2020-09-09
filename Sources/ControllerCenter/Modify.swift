@@ -11,13 +11,15 @@ public struct Modify {
     /// 模块的标识符
     private let identifier:String
     /// 设置的模块局部参数
-    var parameter:[String:Any] = [:]
+    public var parameter:[String:Any] = [:]
     /// 模块弹出的类型
     private var modalPresentationStyle:UIModalPresentationStyle?
     /// 修改值之后通知回掉方法
     var modifyNoticeCompletionDic:[String:((Any?,Bool) -> Parameter)] = [:]
     /// 之前的模块标识符
     fileprivate var fromIdentifier:String?
+    
+    internal var readOnlyKey:String?
     
     init(identifier:String) {
         self.identifier = identifier
@@ -72,8 +74,7 @@ extension Modify {
     ///   - value: 参数对应的值可以允许为空
     ///   - from: 上一个模块来源 默认不设置 如果设置如果上个模块不对应则无法赋值
     /// - Returns: 模块修改器
-    @available(*,deprecated,message: "Please use other func `parameter(key: , block: )`")
-    public func parameter<T:Any>(_ key:String, value:T?, from:String? = nil) -> Modify {
+    func parameter<T:Any>(_ key:String, value:T?, from:String? = nil) -> Modify {
         guard let value = value else {
             return self
         }
@@ -98,8 +99,20 @@ extension Modify {
             let parameter = block(Parameter(key: key, value: newValue, isNewValue: isNewValue, from: from))
             return parameter
         }
-        modify.modifyNoticeCompletionDic[key] = modifyNoticeBlock
-        return modify.parameter(key, value: block(Parameter(key: key, value: nil, isNewValue: false, from: from)).value, from: from)
+        let canAdd:Bool
+        if let readOnlyKey = self.readOnlyKey, readOnlyKey == key {
+            canAdd = true
+        } else if self.readOnlyKey == nil {
+            canAdd = true
+        } else {
+            canAdd = false
+        }
+        var parameterValue:Any?
+        if canAdd {
+            modify.modifyNoticeCompletionDic[key] = modifyNoticeBlock
+            parameterValue = block(Parameter(key: key, value: nil, isNewValue: false, from: from)).value
+        }
+        return modify.parameter(key, value: parameterValue, from: from)
     }
     
     /// 设置来源模块标识符
@@ -142,29 +155,25 @@ extension Modify {
         /// 设置参数的值 用于可以修改的参数 如果修改的是可选值请使用`parameter(modifyOptional:)`
         /// - Parameter value: 可以被修改的值
         /// - Returns: 参数结构体
-        public func parameter<T:Any>(modify value:inout T) -> Parameter {
+        public func parameter<T:Any>(modify value:Property<T>) -> Parameter {
             if self.isNewValue {
                 if let newValue = self.value, let _newValue = newValue as? T {
-                    value = _newValue
+                    value.update(_newValue)
                 } else {
                     assert(false, "If you want to set to nil, use the parameter(modifyOptional:) method")
                 }
             }
-            return parameter(value: value)
+            return parameter(value: value.wrappedValue)
         }
         
         /// 设置参数的值 用于可以修改可选值的参数
         /// - Parameter value: 可以被修改的值
         /// - Returns: 参数的结构体
-        public func parameter<T:Any>(modifyOptional value:inout T?) -> Parameter {
+        public func parameter<T:Any>(modifyOptional value:PropertyOptional<T>?) -> Parameter {
             if self.isNewValue {
-                if let newValue = self.value, let _newValue = newValue as? T {
-                    value = _newValue
-                } else {
-                    value = nil
-                }
+                value?.update(self.value as? T)
             }
-            return parameter(value: value)
+            return parameter(value: value?.wrappedValue)
         }
         
     }

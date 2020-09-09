@@ -1,5 +1,11 @@
 # 版本说明
 
+## 2.0.0版本
+
+去掉`1.0.0～2.0.0`版本之间废弃方法
+
+新增`@Property`和`@propertyOptional`来声明可以被修改变量
+
 ## 1.8.4版本
 
 🔴 修复了`func toDecodable<T:Decodable>() -> T?`没有放开的问题

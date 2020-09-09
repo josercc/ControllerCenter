@@ -1,5 +1,5 @@
 import UIKit
-public struct ControllerCenter {
+public class ControllerCenter {
     /**
      创建一个模块的回掉代理
      - parameter modify:模块配置
@@ -14,20 +14,13 @@ public struct ControllerCenter {
     internal var globaleParameterModifyBlock:((Modify) -> Modify)?
     /// 全局参数通过其他模块已经进行修改的回掉
     var globaleParameterModifyDidChangedBlock:((Modify) -> Void)?
-    /// 获取最新的全局修改器
-    var globaleParameterModify:Modify {
-        if let block = globaleParameterModifyBlock {
-            return block(_tempModify)
-        }
-        return _tempModify
-    }
     /// 一个可以临时修改的全局修改器
     var _tempModify:Modify = Modify(identifier: "ControllerCenter")
     
     /// 注册对应的模块
     /// - Parameter controllerType: 模块视图类型
     /// - Parameter block: 可以模块跳转之前在App内部重新修改设置的参数
-    public mutating func register<T:ModifyModule>(_ controllerType:T.Type, customModify block:((Modify) -> Modify)? = nil) {
+    public func register<T:ModifyModule>(_ controllerType:T.Type, customModify block:((Modify) -> Modify)? = nil) {
         let block:((Modify) -> ModifyModule?) = { modify in
             var _modify = modify
             if let block = block {
@@ -40,33 +33,34 @@ public struct ControllerCenter {
     
     /// 设置全局参数
     /// - Parameter block: 设置全局修改器的回掉
-    public mutating func set(globaleParameter block:@escaping((Modify) -> Modify)) {
+    public func set(globaleParameter block:@escaping((Modify) -> Modify)) {
         globaleParameterModifyBlock = block
     }
-    
-    /// 监听全局函数值已经发生了改变
-    /// - Parameter block: 发生改变的回掉
-    @available(*,deprecated,message: "Please use other func `parameter(key: , block: )`动态修改 不需要监听")
-    public mutating func listen(globaleParameterChanged block:@escaping((Modify) -> Void)) {
-        globaleParameterModifyDidChangedBlock = block
-    }
-    
+
 }
 
 extension ControllerCenter: ModifyParameter {
     public func get<T>(globaleParameter key: String) -> T? {
-        return globaleParameterModify.get(globaleParameter: key)
+        return globaleParameterModify(readOnlyKey: key).get(globaleParameter: key)
     }
     
     public func get<T>(globaleParameter key: String, default: T) -> T {
-        return globaleParameterModify.get(globaleParameter: key, default: `default`)
+        return globaleParameterModify(readOnlyKey: key).get(globaleParameter: key, default: `default`)
     }
     
-    public mutating func update(globaleParameter key: String, value: Any?) {
-        var _globaleParameterModify = globaleParameterModify
+    public func update(globaleParameter key: String, value: Any?) {
+        var _globaleParameterModify = globaleParameterModify(readOnlyKey: key)
         _globaleParameterModify.update(globaleParameter: key, value: value)
         _tempModify = _globaleParameterModify
-        globaleParameterModifyDidChangedBlock?(_tempModify)
+    }
+    
+    func globaleParameterModify(readOnlyKey:String?) -> Modify {
+        var modify = _tempModify
+        modify.readOnlyKey = readOnlyKey
+        if let block = globaleParameterModifyBlock {
+            modify = block(modify)
+        }
+        return modify
     }
 }
 
