@@ -36,6 +36,68 @@ public class ControllerCenter {
     public func set(globaleParameter block:@escaping((Modify) -> Modify)) {
         globaleParameterModifyBlock = block
     }
+    /// 执行组件方法之后的回掉
+    /// - Parameters data: 回掉的数据
+    public typealias ExecuteComponentsMethodHandle<M> = (_ data:M?) -> Void
+    /// 注册组件方法的回掉
+    /// - Parameters data: 注册回掉的参数
+    /// - Parameters result: 执行组件方法的回掉闭包
+    public typealias RegisterComponentsMethodHandle<T,M> = (_ data:T?, _ result:ExecuteComponentsMethodHandle<M>?) -> Void
+    /// 注册组件闭包数组
+    private var registerComponmentsMethodMap:[String:((Any?,ExecuteComponentsMethodHandle<Any>?) -> Void)] = [:]
+    
+    /// 注册一个组件
+    /// - Parameters:
+    ///   - identifier: 组件的唯一标识符
+    ///   - method: 组件的方法
+    ///   - handle: 调用组件的回掉
+    public func register<T:Any>(identifier:String,
+                                method:String = "_",
+                                parse:T.Type,
+                                handle:@escaping RegisterComponentsMethodHandle<T,Any>) {
+        let registerHandle:((Any?,ExecuteComponentsMethodHandle<Any>?) -> Void) = { data, anyExecuteHandle in
+            if let data = data {
+                assert(data is T)
+            }
+            handle(data as? T,anyExecuteHandle)
+        }
+        let componentsMethodName = methodName(identifier: identifier, method: method)
+        assert(!self.registerComponmentsMethodMap.keys.contains(componentsMethodName),"组件\(identifier) 方法\(method)已经被注册！")
+        print("register \(componentsMethodName) successful!")
+        self.registerComponmentsMethodMap[componentsMethodName] = registerHandle
+    }
+    
+    /// 发送一个方法到组件
+    /// - Parameters:
+    ///   - identifier: 注册组件的唯一标识符
+    ///   - method: 注册组件的方法名称
+    ///   - parameter: 执行组件方法的参数
+    ///   - handle: 执行方法的回掉方法
+    public func send<M:Any>(identifier:String,
+                            method:String = "_",
+                            parameter:Any? = nil,
+                            parse:M.Type,
+                            handle:ExecuteComponentsMethodHandle<M>?) {
+        let componentsMethodName = methodName(identifier: identifier, method: method)
+        assert(self.registerComponmentsMethodMap.keys.contains(componentsMethodName),"组件\(identifier) 方法\(method)还没有注册！")
+        print("send \(componentsMethodName) successful!")
+        let registerHandle:((Any?,ExecuteComponentsMethodHandle<Any>?) -> Void)? = self.registerComponmentsMethodMap[componentsMethodName]
+        registerHandle?(parameter, { data in
+            if let data = data {
+                assert(data is M)
+            }
+            handle?(data as? M)
+        })
+    }
+    
+    /// 获取组件的方法名称
+    /// - Parameters:
+    ///   - identifier: 组件注册的标识符
+    ///   - method: 注册组件的名称
+    /// - Returns: 组件的方法名称
+    private func methodName(identifier:String, method:String) -> String {
+        return "[\(identifier)]:[\(method)]"
+    }
 
 }
 
