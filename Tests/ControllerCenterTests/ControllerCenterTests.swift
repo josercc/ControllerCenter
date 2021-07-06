@@ -26,6 +26,13 @@ final class ControllerCenterTests: XCTestCase {
         assert(ControllerCenter.center.get(globaleParameter: "age1")! == 8)
         assert(self.age == 8)
         ControllerCenter.center.update(globaleParameter: "age1", value: nil)
+        
+        ControllerCenter.center.registerComponmentMethod(identifier: "", methodName: "", parse: [String:Any].self) { data, handle in
+            
+        }
+        ControllerCenter.center.registerComponmentMethod(identifier: "", parse: [String:Any].self) { data, handle in
+            
+        }
     }
     
 
