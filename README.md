@@ -1,3 +1,6 @@
+[最新API文档](https://josercc.github.io/ControllerCenter/)
+
+
 ![image-20200821184000857](https://gitee.com/joser_zhang/upic/raw/master/uPic/image-20200821184000857.png)
 
 一个基于中心分发的模块化框架
