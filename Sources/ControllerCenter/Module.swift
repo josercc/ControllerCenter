@@ -6,14 +6,21 @@
 //
 
 import UIKit
-
-public protocol ModifyModule {
-    /// 根据另外模块传递过来的参数修改器生成模块对象 可以允许创建为空
-    /// - Parameter modify: 参数修改器
-    static func make(_ modify:Modify) -> ModifyModule?
+/// 模块化协议
+public protocol Module {
+    /// 根据另外模块传递过来的参数创建对应模块对象
+    /// - Parameter parameter: 参数
+    static func make(module parameter:Parameter) throws -> Self
     /// 模块对应的标识符
-    static var identifier:String { get }
+    static var moduleIdentifier:Identifier { get }
 }
+
+
+extension Module {
+    /// 标识符默认实现为模块的名字
+    static var moduleIdentifier:Identifier { Identifier(self) }
+}
+
 
 
 

@@ -1,50 +1,51 @@
 import UIKit
+
+/// 便捷的获取路由中心
+public let CC = ControllerCenter.center
+/// 模块化路由中心
 public class ControllerCenter {
-    /**
-     创建一个模块的回掉代理
-     - parameter modify:模块配置
-     - returns: 返回该模块的实例对象
-     */
-    internal typealias MakeControllerBlock = ((_ modify:Modify) -> ModifyModule?)
     /// 获取一个全局的模块转发器
     public static var center = ControllerCenter()
-    /// 储存已经注册模块的回掉
-    internal var registerControllers:[String:MakeControllerBlock] = [:]
-    /// 储存全局参数设置
-    internal var globaleParameterModifyBlock:((Modify) -> Modify)?
-    /// 全局参数通过其他模块已经进行修改的回掉
-    var globaleParameterModifyDidChangedBlock:((Modify) -> Void)?
-    /// 一个可以临时修改的全局修改器
-    var _tempModify:Modify = Modify(identifier: "ControllerCenter")
+    /// 已经注册的模块列表
+    private var registerModuleMap:[String:MakeModuleHandle] = [:]
     
-    /// 注册对应的模块
-    /// - Parameter controllerType: 模块视图类型
-    /// - Parameter block: 可以模块跳转之前在App内部重新修改设置的参数
-    public func register<T:ModifyModule>(_ controllerType:T.Type, customModify block:((Modify) -> Modify)? = nil) {
-        let block:((Modify) -> ModifyModule?) = { modify in
-            var _modify = modify
-            if let block = block {
-                _modify = block(_modify)
+    /// 注册模块
+    /// - Parameter model: 模块的类型
+    /// - Parameter identifier: 模块的唯一标识符 默认为模块的`moduleIdentifier`
+    /// - Parameter parameterHandle: 重写模块跳转参数
+    public func register<M:Module>(model:M.Type,
+                                   identifier:Identifier = M.moduleIdentifier,
+                                   parameterHandle:CustomParameterHandle? = nil) {
+        let handle:MakeModuleHandle = {
+            let parameter:Parameter
+            if let parameterHandle = parameterHandle {
+                parameter = parameterHandle($0)
+            } else {
+                parameter = $0
             }
-            return T.make(_modify)
+            return try M.make(module: parameter)
         }
-        self.registerControllers[T.identifier] = block
+        self.registerModuleMap[identifier.value] = handle
     }
     
-    /// 设置全局参数
-    /// - Parameter block: 设置全局修改器的回掉
-    public func set(globaleParameter block:@escaping((Modify) -> Modify)) {
-        globaleParameterModifyBlock = block
+    /// 通过标识符和参数创建一个模块实例
+    /// - Parameters:
+    ///   - identifier: 标识符
+    ///   - parameter: 参数
+    /// - Throws: 创建实例抛出异常
+    /// - Returns: 模块实例
+    public func make(with identifier:Identifier,
+                     parameter:Parameter) throws -> Module {
+        guard let handle = self.registerModuleMap[identifier.value] else {
+            assertionFailure("\(identifier.value) 模块还没注册")
+            throw ModuleError.notRegister
+        }
+        return try handle(parameter)
     }
-    /// 执行组件方法之后的回掉
-    /// - Parameters data: 回掉的数据
-    public typealias ExecuteComponentsMethodHandle<M> = (_ data:M?) -> Void
-    /// 注册组件方法的回掉
-    /// - Parameters data: 注册回掉的参数
-    /// - Parameters result: 执行组件方法的回掉闭包
-    public typealias RegisterComponentsMethodHandle<T,M> = (_ data:T?, _ result:ExecuteComponentsMethodHandle<M>?) -> Void
+    
+
     /// 注册组件闭包数组
-    private var registerComponmentsMethodMap:[String:((Any?,ExecuteComponentsMethodHandle<Any>?) -> Void)] = [:]
+    private var registerComponmentsMethodMap:[String:RegisterComponentsMethodHandle<Any,Any>] = [:]
     
     /// 注册一个组件
     /// - Parameters:
@@ -101,37 +102,19 @@ public class ControllerCenter {
 
 }
 
-extension ControllerCenter: ModifyParameter {
-    public func get<T>(globaleParameter key: String) -> T? {
-        return globaleParameterModify(readOnlyKey: key).get(globaleParameter: key)
-    }
-    
-    public func get<T>(globaleParameter key: String, default: T) -> T {
-        return globaleParameterModify(readOnlyKey: key).get(globaleParameter: key, default: `default`)
-    }
-    
-    public func update(globaleParameter key: String, value: Any?) {
-        var _globaleParameterModify = globaleParameterModify(readOnlyKey: key)
-        _globaleParameterModify.update(globaleParameter: key, value: value)
-        _tempModify = _globaleParameterModify
-    }
-    
-    func globaleParameterModify(readOnlyKey:String?) -> Modify {
-        var modify = _tempModify
-        modify.readOnlyKey = readOnlyKey
-        if let block = globaleParameterModifyBlock {
-            modify = block(modify)
-        }
-        return modify
-    }
-}
-
-
-extension ControllerCenter {
-    /// 创建一个前往模块修改器
-    /// - Parameter identifier: 前往模块的标识符
-    /// - Returns: 模块修改器
-    public static func make(_ identifier:String) -> Modify {
-        return Modify(identifier: identifier)
-    }
+/// 定义闭包
+public extension ControllerCenter {
+    /// 自定义参数
+    /// - Parameter parameter: 调用模块原始参数信息
+    typealias CustomParameterHandle = (_ parameter:Parameter) -> Parameter
+    /// 通过参数生成一个模块实例
+    /// - Parameter parameter: 参数
+    typealias MakeModuleHandle = (_ parameter:Parameter) throws -> Module
+    /// 执行组件方法之后的回掉
+    /// - Parameters data: 回掉的数据
+    typealias ExecuteComponentsMethodHandle<M> = (_ data:M?) -> Void
+    /// 注册组件方法的回掉
+    /// - Parameters data: 注册回掉的参数
+    /// - Parameters result: 执行组件方法的回掉闭包
+    typealias RegisterComponentsMethodHandle<T,M> = (_ data:T?, _ result:ExecuteComponentsMethodHandle<M>?) -> Void
 }
